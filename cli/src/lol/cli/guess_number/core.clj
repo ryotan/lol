@@ -1,4 +1,4 @@
-(ns lol.cli.ch2.core)
+(ns lol.cli.guess-number.core)
 
 (def ^:private status (atom {:min 1 :max 100 :current 50}))
 
