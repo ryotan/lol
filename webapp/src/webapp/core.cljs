@@ -1,8 +1,7 @@
 (ns webapp.core
   (:require [figwheel.client :as fw]
             [om.core :as om :include-macros true]
-            [om.dom :as dom :include-macros true]
-            [clojure.string :as string]))
+            [sablono.core :refer-macros [html]]))
 
 (enable-console-print!)
 
@@ -31,8 +30,8 @@
 
 (defn display [show]
   (if show
-    #js {}
-    #js {:display "none"}))
+    {}
+    {:display "none"}))
 
 (defn handle-change [e text owner]
   (om/transact! text #(.. e -target -value)))
@@ -47,18 +46,15 @@
       {:editing false})
     om/IRenderState
     (render-state [_ {:keys [editing]}]
-      (dom/li nil
-        (dom/span #js {:style (display (not editing))} (om/value text))
-        (dom/input
-          #js {:style     (display editing)
-               :value     (om/value text)
-               :onChange  #(handle-change % text owner)
-               :onKeyDown #(when (= (.-key %) "Enter")
-                            (commit-change text owner))
-               :onBlur    #(commit-change text owner)})
-        (dom/button #js {:style   (display (not editing))
-                         :onClick #(om/set-state! owner :editing true)}
-          "Edit")))))
+      (html [:li
+             [:span {:style (display (not editing))} (om/value text)]
+             [:input {:style     (display editing)
+                      :value     (om/value text)
+                      :onChange  #(handle-change % text owner)
+                      :onKeyDown #(when (= (.-key %) "Enter") (commit-change text owner))
+                      :onBlur    #(commit-change text owner)}]
+             [:button {:style   (display (not editing))
+                       :onClick #(om/set-state! owner :editing true)} "Edit"]]))))
 
 (defn middle-name [{:keys [middle middle-initial]}]
   (cond
@@ -71,16 +67,15 @@
 (defn student-view [student owner]
   (reify om/IRender
     (render [_]
-      (dom/li nil (display-name student)))))
+      (html [:li (display-name student)]))))
 
 (defn professor-view [professor owner]
   (reify om/IRender
     (render [_]
-      (dom/li nil
-        (dom/div nil (display-name professor))
-        (dom/label nil "Classes")
-        (apply dom/ul nil
-          (map #(dom/li nil (om/value %)) (:classes professor)))))))
+      (html [:li
+             [:div (display-name professor)]
+             [:label "Classes"]
+             [:ul (map #(html [:li (om/value %)]) (:classes professor))]]))))
 
 (defmulti entry-view (fn [person _] (:type person)))
 
@@ -101,18 +96,16 @@
 (defn registry-view [data owner]
   (reify om/IRenderState
     (render-state [_ state]
-      (dom/div #js {:id "registry"}
-        (dom/h2 nil "Registry")
-        (apply dom/ul nil
-          (om/build-all entry-view (people data)))))))
+      (html [:div {:id "registry"}
+             [:h2 "Registry"]
+             [:ul (om/build-all entry-view (people data))]]))))
 
 (defn classes-view [data owner]
   (reify om/IRender
     (render [_]
-      (dom/div #js {:id "classes"}
-        (dom/h2 nil "Classes")
-        (apply dom/ul nil
-          (om/build-all editable (vals (:classes data))))))))
+      (html [:div {:id "classes"}
+             [:h2 "Classes"]
+             [:ul (om/build-all editable (vals (:classes data)))]]))))
 
 (om/root registry-view app-state
   {:target (. js/document (getElementById "registry"))})
