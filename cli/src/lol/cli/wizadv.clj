@@ -5,8 +5,7 @@
    :object-locations {:whiskey :living-room
                       :bucket  :living-room
                       :chain   :garden
-                      :frog    :garden}
-   :items            []})
+                      :frog    :garden}})
 
 (defonce ^:private app-status (atom init-status))
 
@@ -59,6 +58,17 @@
         (swap! app-status assoc :location (key to))
         (look))
       "you cannot go that way")))
+
+(defn pickup [object]
+  (let [st @app-status]
+    (if (some #{object} (objects-at (:location st) objects (:object-locations st)))
+      (do
+        (swap! app-status assoc-in [:object-locations object] :body)
+        (str "you are now carrying the " (name object)))
+      "you cannot get that.")))
+
+(defn inventory []
+  (objects-at :body objects (:object-locations @app-status)))
 
 (defn initialize []
   (reset! app-status init-status))
