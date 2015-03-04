@@ -112,10 +112,3 @@
 
 (om/root classes-view app-state
   {:target (. js/document (getElementById "classes"))})
-
-(fw/start {
-           :load-warninged-code true
-           :on-jsload (fn []
-                        ;; (stop-and-start-my app)
-                        )
-           })
