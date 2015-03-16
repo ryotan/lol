@@ -1,6 +1,5 @@
 (ns webapp.core
-  (:require [figwheel.client :as fw]
-            [om.core :as om :include-macros true]
+  (:require [om.core :as om :include-macros true]
             [sablono.core :refer-macros [html]]))
 
 (enable-console-print!)
