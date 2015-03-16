@@ -8,10 +8,10 @@
   (atom
     {:people
      [{:type :student :first "Ben" :last "Bitdiddle" :email "benb@mit.edu"}
-      {:type  :student :first "Alyssa" :middle-initial "P" :last "Hacker"
-       :email "aphacker@mit.edu"}
       {:type  :professor :first "Gerald" :middle "Jay" :last "Sussman"
        :email "metacirc@mit.edu" :classes [:6001 :6946]}
+      {:type  :student :first "Alyssa" :middle-initial "P" :last "Hacker"
+       :email "aphacker@mit.edu"}
       {:type :student :first "Eva" :middle "Lu" :last "Ator" :email "eval@mit.edu"}
       {:type :student :first "Louis" :last "Reasoner" :email "prolog@mit.edu"}
       {:type    :professor :first "Hal" :last "Abelson" :email "evalapply@mit.edu"
@@ -45,15 +45,14 @@
       {:editing false})
     om/IRenderState
     (render-state [_ {:keys [editing]}]
-      (html [:li
-             [:span {:style (display (not editing))} (om/value text)]
-             [:input {:style     (display editing)
-                      :value     (om/value text)
-                      :onChange  #(handle-change % text owner)
-                      :onKeyDown #(when (= (.-key %) "Enter") (commit-change text owner))
-                      :onBlur    #(commit-change text owner)}]
-             [:button {:style   (display (not editing))
-                       :onClick #(om/set-state! owner :editing true)} "Edit"]]))))
+      (if editing
+        (html [:div.ui.fluid.input.item [:input {:style     (display editing)
+                                                 :value     (om/value text)
+                                                 :onChange  #(handle-change % text owner)
+                                                 :onKeyDown #(when (= (.-key %) "Enter") (commit-change text owner))
+                                                 :onBlur    #(commit-change text owner)}]])
+        (html [:div.ui.label {:style (display (not editing))} (om/value text)
+               [:a.detail {:onClick #(om/set-state! owner :editing true)} "Edit"]])))))
 
 (defn middle-name [{:keys [middle middle-initial]}]
   (cond
@@ -66,15 +65,23 @@
 (defn student-view [student owner]
   (reify om/IRender
     (render [_]
-      (html [:li (display-name student)]))))
+      (html [:div.teal.card
+             [:div.content
+              [:div.header (display-name student)]
+              [:div.meta "Student"]]]))))
 
 (defn professor-view [professor owner]
   (reify om/IRender
     (render [_]
-      (html [:li
-             [:div (display-name professor)]
-             [:label "Classes"]
-             [:ul (map #(html [:li (om/value %)]) (:classes professor))]]))))
+      (html [:div.red.card
+             [:div.content
+              [:div.header (display-name professor)]
+              [:div.meta "Professor"]]
+             [:div.extra.content
+              [:p (count (:classes professor)) " classes"]
+              [:div.ui.mini.list
+               (map #(html [:a.ui.item (om/value %)]) (:classes professor))]
+              ]]))))
 
 (defmulti entry-view (fn [person _] (:type person)))
 
@@ -97,14 +104,14 @@
     (render-state [_ state]
       (html [:div {:id "registry"}
              [:h2 "Registry"]
-             [:ul (om/build-all entry-view (people data))]]))))
+             [:div.ui.three.cards (om/build-all entry-view (people data))]]))))
 
 (defn classes-view [data owner]
   (reify om/IRender
     (render [_]
-      (html [:div {:id "classes"}
+      (html [:div#classes
              [:h2 "Classes"]
-             [:ul (om/build-all editable (vals (:classes data)))]]))))
+             [:div.ui.large.vertical.fluid.labels.list (om/build-all editable (vals (:classes data)))]]))))
 
 (om/root registry-view app-state
   {:target (. js/document (getElementById "registry"))})
